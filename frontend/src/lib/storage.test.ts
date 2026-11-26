@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addAnswers,
   addAttempt,
+  createExport,
   DEFAULT_SETTINGS,
   deleteAnswer,
+  getExportFileName,
   loadStore,
   MAX_ANSWER_WORDS,
   MAX_ATTEMPTS,
@@ -417,5 +419,51 @@ describe("settings and the last answer", () => {
   it("saves the last opened answer", () => {
     expect(saveLastAnswerId(emptyData(), "a1").data.lastAnswerId).toBe("a1");
     expect(stored(STORAGE_KEYS.lastAnswerId)).toBe("a1");
+  });
+});
+
+describe("export", () => {
+  it("holds every answer and attempt with the version and the time", () => {
+    const data: StoreData = {
+      ...emptyData(),
+      answers: [createAnswer("a2", "Second answer."), createAnswer("a1", "First answer.")],
+      attempts: [createAttempt("t1", "a1")],
+      lastAnswerId: "a1",
+    };
+
+    const result = createExport(data, new Date("2026-11-26T09:30:00.000Z"));
+
+    expect(result).toEqual({
+      app: "copylekha",
+      version: STORAGE_VERSION,
+      exportedAt: "2026-11-26T09:30:00.000Z",
+      answers: data.answers,
+      attempts: data.attempts,
+    });
+  });
+
+  it("can be written as JSON and read back unchanged", () => {
+    const data: StoreData = {
+      ...emptyData(),
+      answers: [createAnswer("a1", "First answer.")],
+      attempts: [createAttempt("t1", "a1")],
+    };
+
+    const result = createExport(data, new Date("2026-11-26T09:30:00.000Z"));
+
+    expect(JSON.parse(JSON.stringify(result))).toEqual(result);
+  });
+
+  it("writes nothing to storage", () => {
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+
+    createExport(emptyData(), new Date("2026-11-26T09:30:00.000Z"));
+
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it("names the file with the local date", () => {
+    expect(getExportFileName(new Date(2026, 10, 26, 23, 59))).toBe("copylekha-2026-11-26.json");
+    expect(getExportFileName(new Date(2027, 0, 5, 0, 0))).toBe("copylekha-2027-01-05.json");
   });
 });

@@ -108,6 +108,7 @@ A single model answer can also be pasted by hand. The learner picks its task and
 2. Each row shows the title, the task, the word count and the last accuracy. The answer open now is marked.
 3. At the top: on how many of the last seven days the learner practised, the streak of days in a row, and **Up next**, the first answer of the daily order not practised yet.
 4. The learner can load, rename or delete an answer. Deleting asks first and also deletes its attempts.
+5. **Export** at the bottom of the panel downloads every answer and attempt as one JSON file, as a backup.
 
 ## 6. Functional requirements
 
@@ -214,6 +215,7 @@ Each requirement has an ID made of its area and a number, such as `FR-TYPE-03`. 
 | FR-LIBRARY-09 | **Delete** asks "Delete this answer?" and says its practice history will be deleted too. Confirming deletes the answer and all its attempts, and says "Answer deleted".                                                                                                                               |
 | FR-LIBRARY-10 | Deleting the answer open now loads the newest remaining answer, or the empty state when none is left.                                                                                                                                                                                                 |
 | FR-LIBRARY-11 | With no answers, the panel says "No answers yet. Paste one to start.", and the page shows an empty state with **Get answers from AI** and **Paste answer**.                                                                                                                                           |
+| FR-LIBRARY-12 | **Export** downloads every answer and attempt as one JSON file named with the learner's date, such as `copylekha-2026-11-26.json`. The file also holds the data version and the time of the export. It is made in the browser; nothing is sent to a server.                                           |
 
 ### 6.7 Result (RESULT)
 
@@ -504,7 +506,7 @@ Ideas for later versions. None of them is built yet, and they are in no order. E
 | `/practice/[id]`       | a direct link to one answer                                                            |                                                                                                                                 |
 | Cloud voices           | more natural speech; needs an API key and has a cost                                   | Sends each word to a voice service, against the non-goal of sending the learner's text to a server; it could only be an opt-in. |
 | Login and cloud sync   | the same data on several devices; needs a server                                       | Changes NFR-PRIVACY-01 (no account, no server).                                                                                 |
-| Export and import      | back up the Library and attempts to a JSON file                                        |                                                                                                                                 |
+| Import                 | restore the Library and attempts from an exported JSON file (export is FR-LIBRARY-12)  |                                                                                                                                 |
 | Support link           | a donation link in About                                                               |                                                                                                                                 |
 
 ## Appendix A: The AI prompt

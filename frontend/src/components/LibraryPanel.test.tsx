@@ -182,3 +182,34 @@ describe("LibraryPanel: up next and practice days", () => {
     expect(screen.getByText("Practised on 1 of the last 7 days")).toBeTruthy();
   });
 });
+
+describe("LibraryPanel: export", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("downloads the answers and attempts as a dated JSON file", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 26, 12, 0));
+    let blob: Blob | undefined;
+    vi.spyOn(URL, "createObjectURL").mockImplementation((value) => {
+      blob = value as Blob;
+      return "blob:export";
+    });
+    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const { user } = setup();
+
+    await user.click(screen.getByRole("button", { name: "Export" }));
+
+    expect(click).toHaveBeenCalledOnce();
+    const link = click.mock.contexts[0] as HTMLAnchorElement;
+    expect(link.download).toBe("copylekha-2026-11-26.json");
+    expect(link.href).toBe("blob:export");
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:export");
+    expect(blob?.type).toBe("application/json");
+    const exported: unknown = JSON.parse((await blob?.text()) ?? "");
+    expect(exported).toMatchObject({ app: "copylekha", answers: ANSWERS, attempts: ATTEMPTS });
+  });
+});

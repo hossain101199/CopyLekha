@@ -365,3 +365,33 @@ export const saveLastAnswerId = (data: StoreData, lastAnswerId: string): ChangeR
   data: { ...data, lastAnswerId },
   saved: writeAll([[STORAGE_KEYS.lastAnswerId, lastAnswerId]]),
 });
+
+// ---- Export ----------------------------------------------------------------------
+
+// What the Export button downloads: every answer and attempt, as they are stored.
+// It is built here and saved by the browser; nothing is sent anywhere.
+export type StoreExport = {
+  app: "copylekha";
+  version: number;
+  exportedAt: string;
+  answers: Answer[];
+  attempts: Attempt[];
+};
+
+export const createExport = (
+  data: Pick<StoreData, "answers" | "attempts">,
+  now: Date,
+): StoreExport => ({
+  app: "copylekha",
+  version: STORAGE_VERSION,
+  exportedAt: now.toISOString(),
+  answers: data.answers,
+  attempts: data.attempts,
+});
+
+// "copylekha-2026-11-26.json", with the date in the learner's own time zone.
+export const getExportFileName = (now: Date): string => {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `copylekha-${now.getFullYear()}-${month}-${day}.json`;
+};

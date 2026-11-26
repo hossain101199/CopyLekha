@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Pencil, Trash2, X } from "lucide-react";
+import { ArrowRight, Check, Download, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, memo, useCallback, useId, useMemo, useRef, useState } from "react";
 
 import {
@@ -19,15 +19,18 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { findUpNext, getLastAccuracies, getPracticeDays, groupAnswersByDay } from "@/lib/library";
+import { createExport, getExportFileName } from "@/lib/storage";
 import { tokenize } from "@/lib/tokenize";
 import { type Answer, type Attempt, TASK_LABELS } from "@/lib/types";
 
 // Every answer, grouped by day; load, rename or delete one. At the top,
-// how often the learner practised lately and the answer up next.
+// how often the learner practised lately and the answer up next. At the bottom,
+// Export downloads the answers and attempts as a JSON file.
 
 // One day is not a streak yet.
 const MIN_STREAK_SHOWN = 2;
@@ -49,6 +52,20 @@ const describeAnswer = (answer: Answer, lastAccuracy: number | undefined): strin
   const wordCount = tokenize(answer.text).length;
   const accuracy = lastAccuracy === undefined ? "Not practised yet" : `Last ${lastAccuracy}%`;
   return `${TASK_LABELS[answer.task]} · ${wordCount} words · ${accuracy}`;
+};
+
+// The file is made in the browser and saved like any download; nothing is sent anywhere.
+const downloadExport = (answers: Answer[], attempts: Attempt[]): void => {
+  const now = new Date();
+  const json = JSON.stringify(createExport({ answers, attempts }, now), null, 2);
+  const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = getExportFileName(now);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 };
 
 type RenameFormProps = {
@@ -285,6 +302,13 @@ export const LibraryPanel = ({
             </section>
           ))}
         </div>
+
+        <SheetFooter className="border-t">
+          <Button variant="outline" size="lg" onClick={() => downloadExport(answers, attempts)}>
+            <Download aria-hidden="true" />
+            Export
+          </Button>
+        </SheetFooter>
 
         {/* Deleting asks once. */}
         <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
